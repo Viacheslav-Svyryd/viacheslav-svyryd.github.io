@@ -19,6 +19,6 @@ const alt = plain(UI[lang].shot(c.src, c.title), lang);
   <div class="meta">
     <div class="cl"><span>{SITE[lang].geoTag[c.geo]}</span></div>
     <div class="m"><b>{c.metric}</b><small>{c.metricNote}</small><Fragment set:html={spark(index)} /></div>
-    <div class="tx"><h3 set:html={rich(c.title, lang)} /><p set:html={rich(c.cardHook ?? c.hook, lang)} /></div>
+    <div class="tx"><h2 set:html={rich(c.title, lang)} /><p set:html={rich(c.cardHook ?? c.hook, lang)} /></div>
   </div>
 </a>

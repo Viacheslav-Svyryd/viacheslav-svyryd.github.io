@@ -14,7 +14,6 @@ const entries = (await getCollection('cases', (e) => e.data.lang === lang)).sort
 ---
 <Hero lang={lang} />
 <main id="app">
-  <h2 class="vh">{ui.cases}</h2>
   <div class="tags" role="group" aria-label={ui.filt}>
     {SITE[lang].filters.map((f) => (
       <button type="button" class="tag" data-geo={f.id} aria-pressed={f.id === 'all' ? 'true' : 'false'}>{f.label}</button>
