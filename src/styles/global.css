@@ -153,5 +153,6 @@ main{padding-top:30px;padding-bottom:80px}.tags{display:flex;flex-wrap:wrap;gap:
 @media (max-width:900px){.nf{padding-top:28px;padding-bottom:56px}}
 @media (max-width:560px){.nf-btn{width:100%;justify-content:center}}
 
-/* UA-заголовок «SEO-просування» довший за EN й упирався в стрілку (hero.js тоді відсував графік вниз) — на десктопі трохи менший кегль */
-@media (min-width:901px){html[lang="uk"] .hero h1{font-size:clamp(30px,7.2vw,100px)}}
+/* Кегль головного заголовка однаковий для UA і EN (на десктопі). Це максимум, при якому найдовший UA-заголовок «SEO-просування» не впирається в стрілку
+   (hero.js інакше відсуває графік вниз); перевірено на ширинах 1024–1920 і висоті вікна 720/900. Мобільний (≤900) — без змін. */
+@media (min-width:901px){.hero h1{font-size:clamp(30px,7.2vw,100px)}}
