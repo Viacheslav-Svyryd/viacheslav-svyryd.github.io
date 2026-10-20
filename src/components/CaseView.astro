@@ -1,0 +1,126 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { marked } from 'marked';
+import type { CollectionEntry } from 'astro:content';
+import { SITE, UI, type Lang } from '../config/site';
+import { catalogPath } from '../lib/paths';
+import { plain, rich, nb, timeTag, splitSections } from '../lib/format';
+
+interface Props { entry: CollectionEntry<'cases'> }
+const { entry } = Astro.props;
+const c = entry.data;
+const lang: Lang = c.lang;
+const ui = UI[lang];
+const geoTag = SITE[lang].geoTag[c.geo];
+const sec = splitSections(entry.body ?? '');
+const md = (s?: string) => (s ? nb(marked.parse(s, { async: false }) as string) : '');
+
+// Період — структуровані дані: <time datetime> + довжина (+ «станом на»).
+const p = c.period;
+const endHtml = p.end === 'present' ? ui.present : timeTag(p.end, lang);
+const periodValue =
+  `${timeTag(p.start, lang)} –⁠ ${endHtml}` +
+  `<span class='d2'>${p.length}${p.asOf ? `, ${ui.asOf} ${timeTag(p.asOf, lang)}` : ''}</span>`;
+const facts = [...c.about.map((a) => ({ label: a.label, html: nb(a.value) })), { label: p.label, html: periodValue }];
+
+const cell = (x: string) => {
+  const m = x.match(/^(.*?) → (.*?)(?: \((.*)\))?$/);
+  return m ? `<s>${m[1]}</s><i>→</i><b>${m[2]}</b>${m[3] ? `<em>${m[3]}</em>` : ''}` : x;
+};
+
+// Повні версії скрінів для лайтбокса (WebP, висока якість).
+const fulls = new Map<string, string>();
+for (const d of c.dyn) if (d.image) fulls.set(d.cap, (await getImage({ src: d.image, format: 'webp', quality: 92 })).src);
+---
+<main id="app">
+<article class="case">
+  <a class="back" href={catalogPath(lang)}>{ui.back}</a>
+  <header class="chead">
+    <a class="ctag" href={`${catalogPath(lang)}?geo=${c.geo.toLowerCase()}`} title={`${ui.all}: ${geoTag}`}>{geoTag}</a>
+    <h1 set:html={nb(c.h1)} />
+  </header>
+  <div class="cgrid">
+    <nav class="cnav" aria-label={ui.secs}>
+      <ol>{ui.nav.map((n) => <li><a href={`#c-${n[0]}`} data-s={`c-${n[0]}`}>{n[1]}</a></li>)}</ol>
+    </nav>
+    <div class="cbody">
+      <section id="c-about">
+        <h2>{ui.about}</h2>
+        <dl class="facts">
+          {facts.map((f) => <div><dt>{f.label}</dt><dd set:html={f.html} /></div>)}
+        </dl>
+        {c.agency && <p class="note">{ui.agency}</p>}
+      </section>
+
+      <section id="c-result">
+        <h2>{ui.key}</h2>
+        <div class="keyres">
+          <div class="kbig"><b data-count>{c.metric}</b><small>{c.metricNote}</small></div>
+          <div class="hk">
+            <p class="hookbig" set:html={rich(c.hook, lang)} />
+            {c.hook2 && <p class="hooksub" set:html={rich(c.hook2, lang)} />}
+          </div>
+        </div>
+      </section>
+
+      <section id="c-dyn">
+        <h2>{ui.dyn}</h2>
+        {c.dyn.map((d, i) => {
+          if (d.k === 'img' && d.image) {
+            const alt = plain(d.alt ?? '', lang);
+            return (
+              <>
+                <p class={`cap${i ? '' : ' first'}`} set:html={rich(d.cap, lang)} />
+                <figure class="frame" tabindex="0" role="button" aria-label={`${ui.zoom}${alt}`}>
+                  <span class="zi" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M11 8v6M8 11h6"/></svg></span>
+                  <Image src={d.image} alt={alt} width={Math.min(d.image.width, 1400)} format="webp" quality={86} loading="lazy" data-full={fulls.get(d.cap)} />
+                </figure>
+              </>
+            );
+          }
+          if (d.k === 'traf') {
+            return (
+              <>
+                <p class="cap" set:html={rich(d.cap, lang)} />
+                <div class="traf">
+                  <div class="tile"><small>{c.traffic.from.label}</small><b data-count>{c.traffic.from.value}</b></div>
+                  <svg class="tar" viewBox="0 0 120 24" aria-hidden="true"><path d="M2 12H112M101 3l11 9-11 9"/></svg>
+                  <div class="tile hot"><small>{c.traffic.to.label}</small><b data-count>{c.traffic.to.value}</b></div>
+                  <p class="delta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>{c.traffic.delta}</p>
+                </div>
+              </>
+            );
+          }
+          return (
+            <>
+              <p class="cap" set:html={rich(d.cap, lang)} />
+              <div class="tw">
+                <table class="tbl">
+                  <thead><tr>{(d.head ?? []).map((h) => <th>{h ? h : <span class="vh">{ui.metric}</span>}</th>)}</tr></thead>
+                  <tbody>
+                    {(d.rows ?? []).map((r) => (
+                      <tr>{r.map((x, ci) => (ci ? <td set:html={d.plain ? nb(x) : cell(x)} /> : <th scope="row" set:html={nb(x)} />))}</tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {d.note && <p class="note">{d.note}</p>}
+            </>
+          );
+        })}
+      </section>
+
+      <section id="c-detail">
+        <h2>{ui.detail}</h2>
+        <div class="steps"><i class="fill"></i>
+          <div class="st"><h3>{ui.prob}</h3><Fragment set:html={md(sec.problem)} /></div>
+          <div class="st"><h3>{ui.sol}</h3><Fragment set:html={md(sec.solution)} /></div>
+          <div class="st res"><h3>{ui.res}</h3><Fragment set:html={md(sec.result)} /></div>
+        </div>
+        {sec.limits && <aside class="lim"><h3>{ui.lim}</h3><Fragment set:html={md(sec.limits)} /></aside>}
+      </section>
+    </div>
+  </div>
+</article>
+</main>
+<script is:inline src="/js/case.js" defer></script>

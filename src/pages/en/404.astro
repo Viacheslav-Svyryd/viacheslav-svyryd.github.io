@@ -1,0 +1,10 @@
+---
+import Base from '../../layouts/Base.astro';
+import NotFound from '../../components/NotFound.astro';
+import { SITE, UI } from '../../config/site';
+import { catalogPath } from '../../lib/paths';
+const lang = 'en';
+---
+<Base lang={lang} error title={`${UI[lang].nf.title} | ${SITE[lang].brand}`} description={UI[lang].nf.metaDescription} alternates={{ uk: catalogPath('uk'), en: catalogPath('en') }}>
+  <NotFound lang={lang} />
+</Base>

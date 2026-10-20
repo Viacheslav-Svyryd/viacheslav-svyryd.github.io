@@ -1,0 +1,24 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { SITE, UI, type Lang } from '../config/site';
+import { casePath } from '../lib/paths';
+import { plain, rich, spark } from '../lib/format';
+
+interface Props { entry: CollectionEntry<'cases'>; index: number }
+const { entry, index } = Astro.props;
+const c = entry.data;
+const lang: Lang = c.lang;
+const alt = plain(UI[lang].shot(c.src, c.title), lang);
+---
+<a class="card" href={casePath(lang, c.caseSlug)} data-geo={c.geo}>
+  <div class="shot">
+    <Image src={c.cardImage} alt={alt} width={900} format="webp" quality={82} loading={index < 2 ? 'eager' : 'lazy'} />
+    <span class="src">{c.src}</span>
+  </div>
+  <div class="meta">
+    <div class="cl"><span>{SITE[lang].geoTag[c.geo]}</span></div>
+    <div class="m"><b>{c.metric}</b><small>{c.metricNote}</small><Fragment set:html={spark(index)} /></div>
+    <div class="tx"><h3 set:html={rich(c.title, lang)} /><p set:html={rich(c.cardHook ?? c.hook, lang)} /></div>
+  </div>
+</a>

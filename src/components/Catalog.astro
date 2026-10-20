@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+import { SITE, UI, type Lang } from '../config/site';
+import CaseCard from './CaseCard.astro';
+import Hero from './Hero.astro';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const ui = UI[lang];
+const order = ['sto', 'hr-outsourcing', 'medical-network', 'tools-store-us', 'menswear-store-uk'];
+const entries = (await getCollection('cases', (e) => e.data.lang === lang)).sort(
+  (a, b) => order.indexOf(a.data.caseSlug) - order.indexOf(b.data.caseSlug),
+);
+---
+<Hero lang={lang} />
+<main id="app">
+  <h2 class="vh">{ui.cases}</h2>
+  <div class="tags" role="group" aria-label={ui.filt}>
+    {SITE[lang].filters.map((f) => (
+      <button type="button" class="tag" data-geo={f.id} aria-pressed={f.id === 'all' ? 'true' : 'false'}>{f.label}</button>
+    ))}
+  </div>
+  <div class="list">
+    {entries.map((e, i) => <CaseCard entry={e} index={i} />)}
+  </div>
+</main>
+<script is:inline>
+  /* Фільтр за ГЕО без перезавантаження; без JS показуються всі кейси. Параметр ?geo=ua / ?geo=en зберігається в URL. */
+  (function () {
+    var tags = document.querySelectorAll('.tag'), cards = document.querySelectorAll('.card');
+    function apply(g) {
+      var key = (g || 'all').toLowerCase(), has = false;
+      tags.forEach(function (b) { var on = b.dataset.geo.toLowerCase() === key; if (on) has = true; b.setAttribute('aria-pressed', String(on)); });
+      if (!has) key = 'all';
+      cards.forEach(function (c) { c.hidden = key !== 'all' && c.dataset.geo.toLowerCase() !== key; });
+      tags.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.geo.toLowerCase() === key)); });
+    }
+    tags.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var g = b.dataset.geo; apply(g);
+        try { var u = new URL(location.href); g === 'all' ? u.searchParams.delete('geo') : u.searchParams.set('geo', g.toLowerCase()); history.replaceState(null, '', u); } catch (e) {}
+      });
+    });
+    try { apply(new URLSearchParams(location.search).get('geo')); } catch (e) { apply('all'); }
+  })();
+</script>

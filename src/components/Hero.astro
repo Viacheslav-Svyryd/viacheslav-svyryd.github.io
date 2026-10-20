@@ -1,0 +1,16 @@
+---
+import type { Lang } from '../config/site';
+import { SITE } from '../config/site';
+import { nb } from '../lib/format';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = SITE[lang];
+const title = t.heroTitle;
+const lead = t.heroLead;
+const stagesJson = JSON.stringify({ stages: t.stages });
+---
+<section id="hero" class="hero"><h1 set:html={nb(title)} /><p class="lead">{lead}</p>
+<svg class="wave" viewBox="0 0 1200 500" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD400" stop-opacity=".22"/><stop offset="1" stop-color="#FFD400" stop-opacity="0"/></linearGradient><clipPath id="shc"><rect class="shr" x="-110" y="0" width="110" height="500"/></clipPath></defs><clipPath id="cp"><rect class="cr" x="0" y="0" width="1200" height="500"/></clipPath><g clip-path="url(#cp)"><path id="ar" class="area"/><path id="ln" class="ln"/><path id="sh" class="sh" clip-path="url(#shc)"/></g></svg>
+<svg class="ov" id="ov" aria-hidden="true"></svg></section>
+<script is:inline set:html={`var SITE=${stagesJson};`}></script>
+<script is:inline src="/js/hero.js" defer></script>

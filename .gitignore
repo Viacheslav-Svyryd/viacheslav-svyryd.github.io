@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+scripts/forbidden.txt
+.DS_Store
+
+# служебные файлы — только на ПК, в репозиторий не попадают
+CLAUDE.md
+README.md
+docs/
+scripts/

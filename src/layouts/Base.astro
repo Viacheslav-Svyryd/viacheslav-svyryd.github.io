@@ -1,0 +1,90 @@
+---
+import '@fontsource/onest/400.css';
+import '@fontsource/onest/500.css';
+import '@fontsource/onest/600.css';
+import '@fontsource/unbounded/500.css';
+import '@fontsource/unbounded/700.css';
+import '../styles/global.css';
+// Прелоад основних шрифтів (заголовки Unbounded 700, текст Onest 400; кирилиця й латиниця): без підміни шрифту після завантаження макет не «стрибає»
+import unbCy from '@fontsource/unbounded/files/unbounded-cyrillic-700-normal.woff2?url';
+import unbLa from '@fontsource/unbounded/files/unbounded-latin-700-normal.woff2?url';
+import onCy from '@fontsource/onest/files/onest-cyrillic-400-normal.woff2?url';
+import onLa from '@fontsource/onest/files/onest-latin-400-normal.woff2?url';
+import { SITE, UI, OWNER_LATIN, TELEGRAM, NOINDEX, type Lang } from '../config/site';
+import { catalogPath, other } from '../lib/paths';
+import { plain } from '../lib/format';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** Шляхи цієї ж сторінки в обох мовах (кожна мова — окрема сторінка з власним URL). */
+  alternates: { uk: string; en: string };
+  /** Сторінка помилки (404): без canonical/hreflang/og:url, завжди noindex; alternates тут — лише куди веде перемикач мов. */
+  error?: boolean;
+}
+const { lang, title, description, alternates, error = false } = Astro.props;
+const t = SITE[lang];
+const ui = UI[lang];
+const abs = (p: string) => new URL(p, Astro.site).href;
+const self = alternates[lang];
+const year = new Date().getFullYear();
+const otherLang = other(lang);
+// Превью для месенджерів/соцмереж: одна нейтральна картинка на мову (без клієнтів), генерується scripts/make-og.mjs
+const ogImage = abs(`/og/og-${lang === 'uk' ? 'ua' : 'en'}.png`);
+const ogTitle = plain(title, lang);
+const ogDescription = plain(description, lang);
+const ogAlt = `${t.heroTitle} — ${t.brand}, ${t.role}`;
+---
+<!doctype html>
+<html lang={t.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    {(NOINDEX || error) && <meta name="robots" content="noindex, nofollow" />}
+    <title>{ogTitle}</title>
+    <meta name="description" content={ogDescription} />
+    {!error && <link rel="canonical" href={abs(self)} />}
+    {!error && <link rel="alternate" hreflang="uk" href={abs(alternates.uk)} />}
+    {!error && <link rel="alternate" hreflang="en" href={abs(alternates.en)} />}
+    {!error && <link rel="alternate" hreflang="x-default" href={abs(alternates.uk)} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={t.brand} />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    {!error && <meta property="og:url" content={abs(self)} />}
+    <meta property="og:locale" content={lang === 'uk' ? 'uk_UA' : 'en_US'} />
+    <meta property="og:locale:alternate" content={lang === 'uk' ? 'en_US' : 'uk_UA'} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={ogImage} />
+    {[unbCy, unbLa, onCy, onLa].map((href) => <link rel="preload" as="font" type="font/woff2" href={href} crossorigin />)}
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body data-sp="1">
+    <div class="sp" id="sp" aria-hidden="true"><i></i><b></b></div>
+    <header class="site">
+      <a class="brand" href={catalogPath(lang)}><b>{t.brand}</b><span>{t.role}</span></a>
+      <div class="hr">
+        <div class="lang" role="group" aria-label={ui.langAria}>
+          <a href={alternates.uk} hreflang="uk" lang="uk" aria-current={lang === 'uk' ? 'true' : undefined}>UA</a>
+          <i aria-hidden="true"></i>
+          <a href={alternates.en} hreflang="en" lang="en" aria-current={lang === 'en' ? 'true' : undefined}>ENG</a>
+        </div>
+        <a class="tg" href={TELEGRAM} target="_blank" rel="noopener" aria-label={ui.tg}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.2l6.6 2.8 2.8 7L21 3Z"/><path d="M9.6 13 21 3"/></svg>
+        </a>
+      </div>
+    </header>
+    <slot />
+    <footer class="foot"><p>© {year} {OWNER_LATIN}. {t.rights}</p></footer>
+    <script is:inline src="/js/progress.js" defer></script>
+  </body>
+</html>

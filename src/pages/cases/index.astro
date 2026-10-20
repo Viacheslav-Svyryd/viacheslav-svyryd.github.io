@@ -1,0 +1,10 @@
+---
+import Base from '../../layouts/Base.astro';
+import Catalog from '../../components/Catalog.astro';
+import { SITE } from '../../config/site';
+import { catalogPath } from '../../lib/paths';
+const lang = 'uk';
+---
+<Base lang={lang} title={SITE[lang].metaTitle} description={SITE[lang].metaDescription} alternates={{ uk: catalogPath('uk'), en: catalogPath('en') }}>
+  <Catalog lang={lang} />
+</Base>

@@ -1,0 +1,28 @@
+---
+import { UI, type Lang } from '../config/site';
+import { homePath } from '../lib/paths';
+import glyph from '../lib/glyph404.json';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const nf = UI[lang].nf;
+const vb = glyph.viewBox;
+const gdata = JSON.stringify({ outer: glyph.outer, holes: glyph.holes, viewBox: vb });
+---
+<main class="nf">
+  <div class="nf-art" aria-hidden="true">
+    <!-- без JS показується статичний SVG; з JS його замінює canvas (public/js/404.js) -->
+    <svg class="nf-static" viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`} focusable="false">
+      <path d={glyph.outer} fill="#0f0c00" stroke="rgba(255,212,0,.35)" stroke-width="16" stroke-linejoin="round" />
+      {glyph.holes.map((h) => <path d={h} fill="#000" stroke="rgba(255,212,0,.2)" stroke-width="7" stroke-linejoin="round" />)}
+    </svg>
+    <canvas id="nf-cv"></canvas>
+  </div>
+  <h1>{nf.title}</h1>
+  <p class="lead">{nf.text}</p>
+  <a class="nf-btn" href={homePath(lang)}>
+    <span>{nf.cta}</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg>
+  </a>
+  <script is:inline type="application/json" id="g404" set:html={gdata}></script>
+  <script is:inline src="/js/404.js" defer></script>
+</main>
